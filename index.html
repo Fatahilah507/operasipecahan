@@ -1,0 +1,574 @@
+<title>Latihan Hitung Pecahan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Lexend:wght@400;500;600&display=swap">
+<style>
+/* Layout: satu kolom di atas kertas kotak-kotak, soal dan pilihan dalam satu kartu putih. */
+:root {
+  --bg: #F2F6FB;
+  --grid: #DAE5F2;
+  --card: #FFFFFF;
+  --ink: #14233C;
+  --muted: #55667F;
+  --line: #C7D5E7;
+  --accent: #1F5FBF;
+  --accent-soft: #E3EDFB;
+  --accent-ink: #FFFFFF;
+  --good: #17784A;
+  --good-soft: #E1F3E9;
+  --bad: #B3321F;
+  --bad-soft: #FBE5E1;
+  --font-display: "Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+  --font-body: "Lexend", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1626;
+    --grid: #1A2943;
+    --card: #152038;
+    --ink: #E7EEF9;
+    --muted: #96A7C2;
+    --line: #2B3C5B;
+    --accent: #6DA7FF;
+    --accent-soft: #1C2F52;
+    --accent-ink: #0B1426;
+    --good: #5FD59C;
+    --good-soft: #12342A;
+    --bad: #FF8F7F;
+    --bad-soft: #3B1E1E;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1626;
+  --grid: #1A2943;
+  --card: #152038;
+  --ink: #E7EEF9;
+  --muted: #96A7C2;
+  --line: #2B3C5B;
+  --accent: #6DA7FF;
+  --accent-soft: #1C2F52;
+  --accent-ink: #0B1426;
+  --good: #5FD59C;
+  --good-soft: #12342A;
+  --bad: #FF8F7F;
+  --bad-soft: #3B1E1E;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* Header */
+.eyebrow { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+h1 { margin: 4px 0 6px; font-family: var(--font-display); font-weight: 700; font-size: clamp(1.9rem, 6vw, 2.6rem); line-height: 1.08; text-wrap: balance; }
+.sub { margin: 0; color: var(--muted); max-width: 52ch; }
+
+.rule { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: grid; gap: 4px; font-size: 14.5px; }
+.rule strong { font-family: var(--font-display); font-size: 15px; }
+.rule p { margin: 0; color: var(--muted); }
+.rule b { color: var(--ink); font-weight: 600; }
+
+/* Toolbar */
+.bar { display: flex; flex-direction: column; gap: 10px; }
+.bar-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; font-size: 14px; }
+.bar-top .where { font-weight: 600; font-variant-numeric: tabular-nums; }
+.bar-top .count { color: var(--muted); font-variant-numeric: tabular-nums; }
+.track { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.fill { height: 100%; width: 0; background: var(--accent); border-radius: 99px; transition: width .25s ease; }
+.toggle { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; cursor: pointer; }
+.toggle input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--accent); flex: none; }
+.toggle small { display: block; color: var(--muted); font-size: 12.5px; }
+
+/* Navigator */
+.nav { display: grid; grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)); gap: 6px; }
+.nv { height: 36px; min-width: 0; border-radius: 8px; border: 1px solid var(--line); background: var(--card); font-weight: 500; font-size: 14px; font-variant-numeric: tabular-nums; padding: 0; }
+.nv.done { background: var(--accent-soft); border-color: var(--accent); }
+.nv.ok { background: var(--good-soft); border-color: var(--good); color: var(--good); }
+.nv.no { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+.nv.cur { outline: 2px solid var(--ink); outline-offset: 1px; font-weight: 600; }
+
+/* Question card */
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 22px 20px; display: flex; flex-direction: column; gap: 20px; }
+.qnum { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 15px; color: var(--accent); letter-spacing: .02em; }
+.prompt { display: flex; flex-wrap: wrap; align-items: center; gap: .45em .6em; font-size: clamp(1.25rem, 4.4vw, 1.75rem); line-height: 1.2; }
+.prompt .lead { color: var(--muted); font-size: .72em; }
+.tok { display: inline-flex; align-items: center; }
+.op { font-weight: 500; color: var(--accent); padding: 0 .05em; }
+
+/* Fractions drawn as stacked numerator over denominator */
+.frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; line-height: 1.12; margin: 0 .12em; font-variant-numeric: tabular-nums; }
+.num { padding: 0 .28em .1em; border-bottom: .09em solid currentColor; }
+.den { padding: .1em .28em 0; }
+.mixed { display: inline-flex; align-items: center; vertical-align: middle; gap: .08em; }
+
+/* Options */
+.opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.opt { display: flex; align-items: center; gap: 12px; min-width: 0; min-height: 64px; text-align: left; padding: 10px 12px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--bg); font-size: 1.15rem; }
+.opt:hover:not(:disabled) { border-color: var(--accent); }
+.opt:disabled { cursor: default; }
+.opt .let { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 600; background: var(--card); border: 1px solid var(--line); }
+.opt .val { flex: 1; min-width: 0; display: flex; align-items: center; }
+.opt .tag { flex: none; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.opt.sel { border-color: var(--accent); background: var(--accent-soft); }
+.opt.sel .let { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.opt.ok { border-color: var(--good); background: var(--good-soft); }
+.opt.ok .let { background: var(--good); border-color: var(--good); color: var(--card); }
+.opt.ok .tag { color: var(--good); }
+.opt.no { border-color: var(--bad); background: var(--bad-soft); }
+.opt.no .let { background: var(--bad); border-color: var(--bad); color: var(--card); }
+.opt.no .tag { color: var(--bad); }
+
+/* Feedback and steps */
+.feedback { border-radius: 10px; padding: 14px 16px; background: var(--bg); border: 1px solid var(--line); display: grid; gap: 10px; }
+.feedback.good { border-color: var(--good); }
+.feedback.bad { border-color: var(--bad); }
+.verdict { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 17px; }
+.feedback.good .verdict { color: var(--good); }
+.feedback.bad .verdict { color: var(--bad); }
+.steps-title { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.steps { margin: 0; padding-left: 22px; display: grid; gap: 6px; font-size: 1.02rem; line-height: 2; }
+.steps li::marker { color: var(--muted); font-size: .8em; }
+
+/* Actions */
+.actions { display: flex; flex-direction: column; gap: 10px; }
+.row { display: flex; gap: 10px; }
+.btn { flex: 1; min-width: 0; padding: 12px 16px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--card); font-weight: 500; }
+.btn:hover:not(:disabled) { border-color: var(--accent); }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.btn.primary:hover:not(:disabled) { filter: brightness(1.06); }
+.confirm { background: var(--card); border: 1.5px solid var(--accent); border-radius: 12px; padding: 14px 16px; display: grid; gap: 12px; }
+.confirm p { margin: 0; }
+
+/* Result */
+.score { text-align: center; padding: 28px 20px; display: grid; gap: 6px; justify-items: center; }
+.score .big { font-family: var(--font-display); font-weight: 700; font-size: clamp(4rem, 18vw, 6rem); line-height: 1; font-variant-numeric: tabular-nums; color: var(--accent); }
+.score .of { margin: 0; font-size: 1.05rem; font-weight: 500; }
+.score .msg { margin: 0; color: var(--muted); max-width: 40ch; }
+.score .row { width: 100%; max-width: 360px; margin-top: 12px; }
+.review-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.review-head h2 { margin: 0; font-family: var(--font-display); font-size: 1.3rem; }
+.review { display: grid; gap: 12px; }
+.item { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 12px; }
+.item-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.chip { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 99px; border: 1px solid currentColor; }
+.chip.ok { color: var(--good); background: var(--good-soft); }
+.chip.no { color: var(--bad); background: var(--bad-soft); }
+.chip.skip { color: var(--muted); }
+.item .prompt { font-size: clamp(1.1rem, 3.8vw, 1.4rem); }
+.pick { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14.5px; color: var(--muted); align-items: center; }
+.pick span { display: inline-flex; align-items: center; gap: 6px; }
+.pick b { color: var(--ink); font-weight: 600; display: inline-flex; align-items: center; }
+details.how summary { cursor: pointer; font-weight: 500; font-size: 14.5px; color: var(--accent); padding: 4px 0; }
+details.how[open] summary { margin-bottom: 8px; }
+.empty { background: var(--card); border: 1px dashed var(--line); border-radius: 12px; padding: 18px; text-align: center; color: var(--muted); }
+
+/* Nama siswa dan status pengiriman */
+.field { display: grid; gap: 6px; }
+.field label { font-size: 14px; font-weight: 500; }
+.field input { width: 100%; min-width: 0; padding: 12px 14px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--bg); color: var(--ink); font: inherit; font-size: 1.05rem; }
+.field input:focus-visible { border-color: var(--accent); }
+.hint { margin: 0; font-size: 14px; color: var(--bad); }
+.who { margin: 0; display: grid; gap: 2px; justify-items: center; }
+.who small { font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.who strong { font-family: var(--font-display); font-size: clamp(1.4rem, 5vw, 1.9rem); line-height: 1.15; overflow-wrap: anywhere; }
+.send { width: 100%; max-width: 360px; display: grid; gap: 10px; justify-items: center; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); font-size: 14.5px; }
+.send p { margin: 0; }
+.send.sent { border-color: var(--good); background: var(--good-soft); color: var(--good); }
+.send.error { border-color: var(--bad); background: var(--bad-soft); color: var(--bad); }
+.send .btn { flex: none; width: 100%; }
+
+@media (max-width: 420px) {
+  .card { padding: 18px 14px; }
+  .opt { font-size: 1.05rem; gap: 8px; padding: 8px; }
+  .opt .tag { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .fill { transition: none; } }
+</style>
+
+<main class="wrap">
+  <header>
+    <p class="eyebrow">Matematika · Hitung campuran</p>
+    <h1>Latihan Hitung Pecahan</h1>
+    <p class="sub">20 soal pilihan ganda tentang pecahan biasa, pecahan campuran, dan bilangan bulat. Kerjakan di buku tulis, lalu pilih jawabanmu.</p>
+  </header>
+
+  <section class="rule" aria-label="Urutan pengerjaan">
+    <strong>Urutan mengerjakan</strong>
+    <p>Kerjakan <b>×</b> dan <b>:</b> lebih dulu dari kiri ke kanan, baru <b>+</b> dan <b>−</b>. Ubah pecahan campuran menjadi pecahan biasa sebelum dihitung.</p>
+  </section>
+
+  <section class="card" id="start" aria-label="Isi nama siswa">
+    <p class="qnum">Sebelum mulai</p>
+    <div class="field">
+      <label for="studentName">Nama siswa</label>
+      <input id="studentName" type="text" autocomplete="name" maxlength="60" placeholder="Tulis nama lengkap">
+    </div>
+    <p class="hint" id="nameHint" role="alert" hidden>Isi nama dulu supaya nilai tercatat atas namamu.</p>
+    <button class="btn primary" id="startBtn" type="button" style="flex:none">Mulai mengerjakan</button>
+  </section>
+
+  <div id="quiz" class="wrap" style="gap:18px" hidden>
+    <section class="bar" aria-label="Kemajuan">
+      <div class="bar-top">
+        <span class="where" id="where">Soal 1 dari 20</span>
+        <span class="count" id="count">0 terjawab</span>
+      </div>
+      <div class="track" role="progressbar" aria-valuemin="0" aria-valuemax="20" aria-valuenow="0" id="track"><div class="fill" id="fill"></div></div>
+      <label class="toggle" for="practice">
+        <input type="checkbox" id="practice" checked>
+        <span>Tampilkan pembahasan setelah menjawab<small>Matikan untuk mode ujian: jawaban bisa diubah dan pembahasan baru muncul di akhir.</small></span>
+      </label>
+    </section>
+
+    <nav class="nav" id="nav" aria-label="Daftar soal"></nav>
+
+    <article class="card" id="card">
+      <p class="qnum" id="qnum"></p>
+      <div class="prompt" id="prompt"></div>
+      <div class="opts" id="opts" role="group" aria-label="Pilihan jawaban"></div>
+      <div id="feedback" aria-live="polite"></div>
+    </article>
+
+    <div class="actions">
+      <div class="row">
+        <button class="btn" id="prev" type="button">Sebelumnya</button>
+        <button class="btn" id="next" type="button">Berikutnya</button>
+      </div>
+      <button class="btn primary" id="finish" type="button">Selesai dan lihat nilai</button>
+      <div class="confirm" id="confirm" hidden>
+        <p id="confirmText"></p>
+        <div class="row">
+          <button class="btn" id="backToWork" type="button">Kembali mengerjakan</button>
+          <button class="btn primary" id="forceFinish" type="button">Tetap lihat nilai</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="result" class="wrap" style="gap:18px" hidden>
+    <section class="card score" aria-label="Nilai">
+      <p class="who"><small>Nama siswa</small><strong id="scoreName"></strong></p>
+      <p class="qnum" style="margin-top:8px">Nilai akhir</p>
+      <div class="big" id="scoreNum">0</div>
+      <p class="of" id="scoreOf"></p>
+      <p class="msg" id="scoreMsg"></p>
+      <div class="send" id="send" aria-live="polite">
+        <p id="sendText"></p>
+        <button class="btn" id="resend" type="button" hidden>Kirim ulang</button>
+      </div>
+      <div class="row">
+        <button class="btn primary" id="restart" type="button">Ulangi latihan</button>
+        <button class="btn" id="newStudent" type="button">Ganti siswa</button>
+      </div>
+    </section>
+
+    <div class="review-head">
+      <h2>Pembahasan</h2>
+      <label class="toggle" for="onlyWrong" style="align-items:center">
+        <input type="checkbox" id="onlyWrong" style="margin:0">
+        <span>Hanya yang belum benar</span>
+      </label>
+    </div>
+    <div class="review" id="review"></div>
+  </div>
+</main>
+
+<script>
+const PROBLEMS = [{"expr": "[1/2] × 16 + [2 1/2] × 8", "options": ["27", "29", "84", "28"], "answer": 3, "steps": ["Ubah pecahan campuran menjadi pecahan biasa: [2 1/2] = [5/2]", "[1/2] × 16 = [16/2] = 8", "[5/2] × 8 = [40/2] = 20", "8 + 20 = 28", "Jadi, hasilnya adalah 28"]}, {"expr": "15 × [5/6] − [1/10] : [1/4]", "options": ["[12 1/10]", "[13 1/10]", "[12 9/10]", "[49 3/5]"], "answer": 0, "steps": ["15 × [5/6] = [75/6] = [25/2]", "[1/10] : [1/4] = [1/10] × 4 = [4/10] = [2/5]", "[25/2] − [2/5] = [125/10] − [4/10] = [121/10]", "Jadi, hasilnya adalah [12 1/10]"]}, {"expr": "[2 1/2] × [1/5] × 40 − [1/2]", "options": ["[18 1/2]", "[19 1/2]", "20", "[20 1/2]"], "answer": 1, "steps": ["Ubah pecahan campuran menjadi pecahan biasa: [2 1/2] = [5/2]", "[5/2] × [1/5] = [5/10] = [1/2]", "[1/2] × 40 = [40/2] = 20", "20 − [1/2] = [40/2] − [1/2] = [39/2]", "Jadi, hasilnya adalah [19 1/2]"]}, {"expr": "[1/3] × 48 + [3 1/3] × [2/5]", "options": ["[18 1/3]", "[7 11/15]", "[17 1/3]", "[14 2/3]"], "answer": 2, "steps": ["Ubah pecahan campuran menjadi pecahan biasa: [3 1/3] = [10/3]", "[1/3] × 48 = [48/3] = 16", "[10/3] × [2/5] = [20/15] = [4/3]", "16 + [4/3] = [48/3] + [4/3] = [52/3]", "Jadi, hasilnya adalah [17 1/3]"]}, {"expr": "[3/4] : [1/2] − [1/4] : [5/8]", "options": ["2", "[2 1/10]", "[1 9/10]", "[1 1/10]"], "answer": 3, "steps": ["[3/4] : [1/2] = [3/4] × 2 = [6/4] = [3/2]", "[1/4] : [5/8] = [1/4] × [8/5] = [8/20] = [2/5]", "[3/2] − [2/5] = [15/10] − [4/10] = [11/10]", "Jadi, hasilnya adalah [1 1/10]"]}, {"expr": "[1/2] + 8 : 4 : [1/10]", "options": ["[21 1/2]", "[3 7/10]", "[21 1/4]", "[20 1/2]"], "answer": 3, "steps": ["8 : 4 = 2", "2 : [1/10] = 2 × 10 = 20", "[1/2] + 20 = [1/2] + [40/2] = [41/2]", "Jadi, hasilnya adalah [20 1/2]"]}, {"expr": "16 × [1/8] × [1 1/4] − [9/10]", "options": ["[1 3/5]", "[3/5]", "[3 2/5]", "[2 3/5]"], "answer": 0, "steps": ["Ubah pecahan campuran menjadi pecahan biasa: [1 1/4] = [5/4]", "16 × [1/8] = [16/8] = 2", "2 × [5/4] = [10/4] = [5/2]", "[5/2] − [9/10] = [25/10] − [9/10] = [16/10] = [8/5]", "Jadi, hasilnya adalah [1 3/5]"]}, {"expr": "24 : [4/5] × [1/4] − [1 1/2]", "options": ["9", "[3 3/10]", "7", "6"], "answer": 3, "steps": ["Ubah pecahan campuran menjadi pecahan biasa: [1 1/2] = [3/2]", "24 : [4/5] = 24 × [5/4] = [120/4] = 30", "30 × [1/4] = [30/4] = [15/2]", "[15/2] − [3/2] = [12/2] = 6", "Jadi, hasilnya adalah 6"]}, {"expr": "[3 5/6] : [1/4] + [1/3] − [1/2]", "options": ["[19/24]", "[15 1/2]", "[15 1/6]", "[16 1/6]"], "answer": 2, "steps": ["Ubah pecahan campuran menjadi pecahan biasa: [3 5/6] = [23/6]", "[23/6] : [1/4] = [23/6] × 4 = [92/6] = [46/3]", "[46/3] + [1/3] = [47/3]", "[47/3] − [1/2] = [94/6] − [3/6] = [91/6]", "Jadi, hasilnya adalah [15 1/6]"]}, {"expr": "[4 2/3] + [1 2/3] × [1/5] + [1/3]", "options": ["[6 1/3]", "[5 1/3]", "4", "[1 3/5]"], "answer": 1, "steps": ["Ubah pecahan campuran menjadi pecahan biasa: [4 2/3] = [14/3]; [1 2/3] = [5/3]", "[5/3] × [1/5] = [5/15] = [1/3]", "[14/3] + [1/3] = [15/3] = 5", "5 + [1/3] = [15/3] + [1/3] = [16/3]", "Jadi, hasilnya adalah [5 1/3]"]}, {"expr": "60 × [1/6] − [4 5/6] + [1 1/2]", "options": ["[13 1/3]", "[6 2/3]", "[5 2/3]", "[7 2/3]"], "answer": 1, "steps": ["Ubah pecahan campuran menjadi pecahan biasa: [4 5/6] = [29/6]; [1 1/2] = [3/2]", "60 × [1/6] = [60/6] = 10", "10 − [29/6] = [60/6] − [29/6] = [31/6]", "[31/6] + [3/2] = [31/6] + [9/6] = [40/6] = [20/3]", "Jadi, hasilnya adalah [6 2/3]"]}, {"expr": "[4 1/6] : [1/2] : [5/6] + [3/5]", "options": ["[11 3/5]", "[9 2/5]", "[9 3/5]", "[10 3/5]"], "answer": 3, "steps": ["Ubah pecahan campuran menjadi pecahan biasa: [4 1/6] = [25/6]", "[25/6] : [1/2] = [25/6] × 2 = [50/6] = [25/3]", "[25/3] : [5/6] = [25/3] × [6/5] = [150/15] = 10", "10 + [3/5] = [50/5] + [3/5] = [53/5]", "Jadi, hasilnya adalah [10 3/5]"]}, {"expr": "[3/25] × [3 7/6] + 135 : 15", "options": ["[9 1/2]", "[8 1/2]", "[10 1/2]", "10"], "answer": 0, "steps": ["Ubah pecahan campuran menjadi pecahan biasa: [3 7/6] = [25/6]", "[3/25] × [25/6] = [75/150] = [1/2]", "135 : 15 = 9", "[1/2] + 9 = [1/2] + [18/2] = [19/2]", "Jadi, hasilnya adalah [9 1/2]"]}, {"expr": "[2 1/4] × [3 2/3] : [1/2] − [1/5]", "options": ["[17 3/10]", "[15 3/10]", "[16 3/10]", "[16 7/10]"], "answer": 2, "steps": ["Ubah pecahan campuran menjadi pecahan biasa: [2 1/4] = [9/4]; [3 2/3] = [11/3]", "[9/4] × [11/3] = [99/12] = [33/4]", "[33/4] : [1/2] = [33/4] × 2 = [66/4] = [33/2]", "[33/2] − [1/5] = [165/10] − [2/10] = [163/10]", "Jadi, hasilnya adalah [16 3/10]"]}, {"expr": "3 + [2/3] × [2 1/4] : [1 4/5]", "options": ["[4 7/12]", "[5 7/10]", "[3 5/6]", "[2 1/6]"], "answer": 2, "steps": ["Ubah pecahan campuran menjadi pecahan biasa: [2 1/4] = [9/4]; [1 4/5] = [9/5]", "[2/3] × [9/4] = [18/12] = [3/2]", "[3/2] : [9/5] = [3/2] × [5/9] = [15/18] = [5/6]", "3 + [5/6] = [18/6] + [5/6] = [23/6]", "Jadi, hasilnya adalah [3 5/6]"]}, {"expr": "36 : 3 × [1 1/8] + [2 7/8]", "options": ["[16 3/8]", "[15 3/8]", "[17 3/8]", "[10 5/8]"], "answer": 0, "steps": ["Ubah pecahan campuran menjadi pecahan biasa: [1 1/8] = [9/8]; [2 7/8] = [23/8]", "36 : 3 = 12", "12 × [9/8] = [108/8] = [27/2]", "[27/2] + [23/8] = [108/8] + [23/8] = [131/8]", "Jadi, hasilnya adalah [16 3/8]"]}, {"expr": "[1 1/3] − [1/2] : [1 1/2] : [1/3]", "options": ["[1 1/12]", "[2 1/3]", "[1/3]", "[1 2/3]"], "answer": 2, "steps": ["Ubah pecahan campuran menjadi pecahan biasa: [1 1/3] = [4/3]; [1 1/2] = [3/2]", "[1/2] : [3/2] = [1/2] × [2/3] = [2/6] = [1/3]", "[1/3] : [1/3] = [1/3] × 3 = [3/3] = 1", "[4/3] − 1 = [4/3] − [3/3] = [1/3]", "Jadi, hasilnya adalah [1/3]"]}, {"expr": "[1 9/10] + [1 1/6] × 6 + [4 1/5]", "options": ["[13 1/10]", "[12 1/10]", "[14 1/10]", "[22 3/5]"], "answer": 0, "steps": ["Ubah pecahan campuran menjadi pecahan biasa: [1 9/10] = [19/10]; [1 1/6] = [7/6]; [4 1/5] = [21/5]", "[7/6] × 6 = [42/6] = 7", "[19/10] + 7 = [19/10] + [70/10] = [89/10]", "[89/10] + [21/5] = [89/10] + [42/10] = [131/10]", "Jadi, hasilnya adalah [13 1/10]"]}, {"expr": "[2 1/10] + [2 1/2] × [2 4/5] − [1/2]", "options": ["[8 4/5]", "[8 3/5]", "[7 3/5]", "[9 3/5]"], "answer": 1, "steps": ["Ubah pecahan campuran menjadi pecahan biasa: [2 1/10] = [21/10]; [2 1/2] = [5/2]; [2 4/5] = [14/5]", "[5/2] × [14/5] = [70/10] = 7", "[21/10] + 7 = [21/10] + [70/10] = [91/10]", "[91/10] − [1/2] = [91/10] − [5/10] = [86/10] = [43/5]", "Jadi, hasilnya adalah [8 3/5]"]}, {"expr": "[4 2/3] − [3 2/3] − [2 7/10] : [3 3/8]", "options": ["[9 2/15]", "[1/5]", "[1 1/5]", "[2/5]"], "answer": 1, "steps": ["Ubah pecahan campuran menjadi pecahan biasa: [4 2/3] = [14/3]; [3 2/3] = [11/3]; [2 7/10] = [27/10]; [3 3/8] = [27/8]", "[27/10] : [27/8] = [27/10] × [8/27] = [216/270] = [4/5]", "[14/3] − [11/3] = [3/3] = 1", "1 − [4/5] = [5/5] − [4/5] = [1/5]", "Jadi, hasilnya adalah [1/5]"]}];
+const N = PROBLEMS.length;
+const LET = ['A', 'B', 'C', 'D'];
+const KEY = 'latihan-hitung-pecahan-v1';
+const $ = (id) => document.getElementById(id);
+
+// Tujuan pengiriman nilai. Ganti MAPEL dengan nama mata pelajaran sebelum dibagikan ke siswa.
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyexhoYhE3W4GH3P348_9y7uTvCGIK-cF_m6NB-1d87rwcQtD4cOG3Fyob6zA-UcyHQ/exec';
+const MAPEL = '[Masukkan Mapel]';
+
+const state = { idx: 0, answers: Array(N).fill(null), practice: true, finished: false, confirming: false, onlyWrong: false, name: '', started: false, send: 'idle' };
+
+function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+function fracHTML(w, n, d) {
+  const f = '<span class="frac"><span class="num">' + n + '</span><span class="den">' + d + '</span></span>';
+  return w ? '<span class="mixed"><span class="whole">' + w + '</span>' + f + '</span>' : f;
+}
+// Teks bebas yang memuat penanda pecahan [n/d] atau [w n/d]
+function inline(str) {
+  return esc(str).replace(/\[(?:(\d+) )?(\d+)\/(\d+)\]/g, (m, w, n, d) => fracHTML(w, n, d));
+}
+function exprHTML(str) {
+  const toks = str.match(/\[[^\]]+\]|\d+|[×:+−]/g) || [];
+  return toks.map((t) => {
+    if (t[0] === '[') return '<span class="tok">' + inline(t) + '</span>';
+    if (/\d/.test(t)) return '<span class="tok">' + t + '</span>';
+    return '<span class="op">' + t + '</span>';
+  }).join('');
+}
+function promptHTML(p) {
+  return '<span class="lead">Hasil dari</span>' + exprHTML(p.expr) + '<span class="lead">adalah ....</span>';
+}
+
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify({ idx: state.idx, answers: state.answers, practice: state.practice, name: state.name, started: state.started })); } catch (e) {}
+}
+function load() {
+  try {
+    const s = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (s && Array.isArray(s.answers) && s.answers.length === N) {
+      state.idx = Math.min(Math.max(parseInt(s.idx, 10) || 0, 0), N - 1);
+      state.answers = s.answers.map((x) => (Number.isInteger(x) && x >= 0 && x < 4 ? x : null));
+      state.practice = !!s.practice;
+      state.name = typeof s.name === 'string' ? s.name.slice(0, 60) : '';
+      state.started = !!s.started && state.name.trim() !== '';
+    }
+  } catch (e) {}
+}
+
+function answeredCount() { return state.answers.filter((a) => a !== null).length; }
+function correctCount() { return state.answers.filter((a, i) => a === PROBLEMS[i].answer).length; }
+function stepsHTML(p) {
+  return '<ol class="steps">' + p.steps.map((s) => '<li>' + inline(s) + '</li>').join('') + '</ol>';
+}
+
+function renderNav() {
+  $('nav').innerHTML = PROBLEMS.map((p, i) => {
+    const a = state.answers[i];
+    let cls = '';
+    if (a !== null) cls = state.practice ? (a === p.answer ? 'ok' : 'no') : 'done';
+    const status = a === null ? 'belum dijawab' : state.practice ? (a === p.answer ? 'benar' : 'salah') : 'sudah dijawab';
+    return '<button type="button" class="nv ' + cls + (i === state.idx ? ' cur' : '') + '" data-i="' + i + '" aria-label="Soal ' + (i + 1) + ', ' + status + '"' + (i === state.idx ? ' aria-current="true"' : '') + '>' + (i + 1) + '</button>';
+  }).join('');
+}
+
+function renderCard() {
+  const p = PROBLEMS[state.idx];
+  const a = state.answers[state.idx];
+  const showFb = state.practice && a !== null;
+  $('qnum').textContent = 'Soal ' + (state.idx + 1);
+  $('prompt').innerHTML = promptHTML(p);
+  $('opts').innerHTML = p.options.map((o, i) => {
+    let cls = '', tag = '';
+    if (showFb) {
+      if (i === p.answer) { cls = 'ok'; tag = 'Benar'; }
+      else if (i === a) { cls = 'no'; tag = 'Pilihanmu'; }
+    } else if (i === a) { cls = 'sel'; }
+    const locked = showFb;
+    return '<button type="button" class="opt ' + cls + '" data-o="' + i + '"' + (locked ? ' disabled' : '') + ' aria-pressed="' + (i === a) + '" aria-label="Pilihan ' + LET[i] + '">' +
+      '<span class="let">' + LET[i] + '</span><span class="val">' + inline(o) + '</span>' + (tag ? '<span class="tag">' + tag + '</span>' : '') + '</button>';
+  }).join('');
+  if (showFb) {
+    const ok = a === p.answer;
+    $('feedback').innerHTML = '<div class="feedback ' + (ok ? 'good' : 'bad') + '">' +
+      '<p class="verdict">' + (ok ? 'Benar!' : 'Belum tepat. Jawaban yang benar adalah ' + LET[p.answer] + '.') + '</p>' +
+      '<p class="steps-title">Cara menghitung</p>' + stepsHTML(p) + '</div>';
+  } else {
+    $('feedback').innerHTML = '';
+  }
+}
+
+function renderBar() {
+  const n = answeredCount();
+  $('where').textContent = 'Soal ' + (state.idx + 1) + ' dari ' + N;
+  $('count').textContent = n + ' terjawab';
+  $('fill').style.width = (n / N * 100) + '%';
+  $('track').setAttribute('aria-valuenow', String(n));
+  $('practice').checked = state.practice;
+  $('prev').disabled = state.idx === 0;
+  $('next').disabled = state.idx === N - 1;
+}
+
+function renderConfirm() {
+  const left = N - answeredCount();
+  $('confirm').hidden = !state.confirming;
+  if (state.confirming) {
+    $('confirmText').textContent = 'Masih ada ' + left + ' soal yang belum dijawab. Soal tanpa jawaban dihitung salah.';
+  }
+}
+
+function renderSend() {
+  const box = $('send');
+  box.className = 'send' + (state.send === 'sent' ? ' sent' : state.send === 'error' ? ' error' : '');
+  $('sendText').textContent =
+    state.send === 'sending' ? 'Mengirim nilai ke Google Apps Script...'
+    : state.send === 'sent' ? 'Data nilai sudah dikirim ke Google Apps Script.'
+    : state.send === 'error' ? 'Nilai belum terkirim. Periksa koneksi internet, lalu kirim ulang.'
+    : 'Nilai akan dikirim otomatis.';
+  $('resend').hidden = state.send !== 'error';
+}
+
+// Kirim nama, mapel, dan nilai. no-cors dan text/plain dipakai agar Apps Script menerima
+// permintaan tanpa preflight; balasannya tidak bisa dibaca dari halaman ini.
+async function sendResult() {
+  if (state.send === 'sending') return;
+  state.send = 'sending';
+  renderSend();
+  const payload = { nama: state.name, mapel: MAPEL, nilai: Math.round(correctCount() * 100 / N) };
+  try {
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload),
+    });
+    state.send = 'sent';
+  } catch (e) {
+    state.send = 'error';
+  }
+  renderSend();
+}
+
+function renderResult() {
+  $('scoreName').textContent = state.name;
+  renderSend();
+  const c = correctCount();
+  $('scoreNum').textContent = String(Math.round(c * 100 / N));
+  $('scoreOf').textContent = c + ' dari ' + N + ' soal benar';
+  const score = c * 100 / N;
+  $('scoreMsg').textContent = score >= 90 ? 'Sangat baik. Urutan operasi dan perhitungan pecahanmu sudah kuat.'
+    : score >= 75 ? 'Baik. Periksa lagi soal yang salah di bawah ini.'
+    : score >= 60 ? 'Cukup. Pelajari pembahasan soal yang salah, lalu coba lagi.'
+    : 'Ayo berlatih lagi. Perhatikan urutan operasi dan cara mengubah pecahan campuran.';
+  $('onlyWrong').checked = state.onlyWrong;
+  const items = PROBLEMS.map((p, i) => ({ p, i, a: state.answers[i] }))
+    .filter((x) => !state.onlyWrong || x.a !== x.p.answer);
+  if (!items.length) {
+    $('review').innerHTML = '<div class="empty">Semua soal sudah benar. Tidak ada yang perlu diperbaiki.</div>';
+    return;
+  }
+  $('review').innerHTML = items.map(({ p, i, a }) => {
+    const status = a === null ? ['skip', 'Belum dijawab'] : a === p.answer ? ['ok', 'Benar'] : ['no', 'Salah'];
+    const mine = a === null ? '<span>Jawabanmu: <b>kosong</b></span>' : '<span>Jawabanmu: <b>' + LET[a] + '. ' + inline(p.options[a]) + '</b></span>';
+    return '<article class="item">' +
+      '<div class="item-top"><p class="qnum">Soal ' + (i + 1) + '</p><span class="chip ' + status[0] + '">' + status[1] + '</span></div>' +
+      '<div class="prompt">' + promptHTML(p) + '</div>' +
+      '<div class="pick">' + mine + '<span>Kunci: <b>' + LET[p.answer] + '. ' + inline(p.options[p.answer]) + '</b></span></div>' +
+      '<details class="how"' + (status[0] === 'ok' ? '' : ' open') + '><summary>Cara menghitung</summary>' + stepsHTML(p) + '</details></article>';
+  }).join('');
+}
+
+function render() {
+  $('start').hidden = state.started;
+  $('quiz').hidden = state.finished || !state.started;
+  $('result').hidden = !state.finished;
+  if (!state.started) return;
+  if (state.finished) { renderResult(); return; }
+  renderBar();
+  renderNav();
+  renderCard();
+  renderConfirm();
+}
+
+function go(i, scroll) {
+  state.idx = Math.min(Math.max(i, 0), N - 1);
+  state.confirming = false;
+  save();
+  render();
+  if (scroll) $('card').scrollIntoView({ block: 'nearest' });
+}
+function choose(o) {
+  if (state.finished) return;
+  if (state.practice && state.answers[state.idx] !== null) return;
+  state.answers[state.idx] = o;
+  state.confirming = false;
+  save();
+  render();
+}
+function finish(force) {
+  if (!force && answeredCount() < N) { state.confirming = true; render(); return; }
+  state.finished = true;
+  state.confirming = false;
+  state.send = 'idle';
+  render();
+  window.scrollTo(0, 0);
+  sendResult();
+}
+function restart() {
+  state.idx = 0;
+  state.answers = Array(N).fill(null);
+  state.finished = false;
+  state.confirming = false;
+  state.onlyWrong = false;
+  state.send = 'idle';
+  save();
+  render();
+  window.scrollTo(0, 0);
+}
+function newStudent() {
+  state.name = '';
+  state.started = false;
+  $('studentName').value = '';
+  $('nameHint').hidden = true;
+  restart();
+  $('studentName').focus();
+}
+function startQuiz() {
+  const name = $('studentName').value.replace(/\s+/g, ' ').trim();
+  if (!name) { $('nameHint').hidden = false; $('studentName').focus(); return; }
+  $('nameHint').hidden = true;
+  state.name = name.slice(0, 60);
+  state.started = true;
+  save();
+  render();
+  window.scrollTo(0, 0);
+}
+
+$('nav').addEventListener('click', (e) => {
+  const b = e.target.closest('.nv');
+  if (b) go(parseInt(b.dataset.i, 10), true);
+});
+$('opts').addEventListener('click', (e) => {
+  const b = e.target.closest('.opt');
+  if (b && !b.disabled) choose(parseInt(b.dataset.o, 10));
+});
+$('prev').addEventListener('click', () => go(state.idx - 1, true));
+$('next').addEventListener('click', () => go(state.idx + 1, true));
+$('finish').addEventListener('click', () => finish(false));
+$('forceFinish').addEventListener('click', () => finish(true));
+$('backToWork').addEventListener('click', () => {
+  const first = state.answers.findIndex((a) => a === null);
+  go(first === -1 ? state.idx : first, true);
+});
+$('restart').addEventListener('click', restart);
+$('newStudent').addEventListener('click', newStudent);
+$('resend').addEventListener('click', sendResult);
+$('startBtn').addEventListener('click', startQuiz);
+$('studentName').addEventListener('keydown', (e) => { if (e.key === 'Enter') startQuiz(); });
+$('studentName').addEventListener('input', () => { $('nameHint').hidden = true; });
+$('practice').addEventListener('change', (e) => { state.practice = e.target.checked; save(); render(); });
+$('onlyWrong').addEventListener('change', (e) => { state.onlyWrong = e.target.checked; renderResult(); });
+
+document.addEventListener('keydown', (e) => {
+  if (!state.started || state.finished || e.ctrlKey || e.metaKey || e.altKey) return;
+  const t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
+  if (e.key === 'ArrowLeft') { go(state.idx - 1, false); return; }
+  if (e.key === 'ArrowRight') { go(state.idx + 1, false); return; }
+  const k = e.key.toLowerCase();
+  const o = 'abcd'.indexOf(k);
+  if (o !== -1 && k.length === 1) { choose(o); return; }
+  if (['1', '2', '3', '4'].includes(k)) choose(parseInt(k, 10) - 1);
+});
+
+load();
+$('studentName').value = state.name;
+render();
+</script>
